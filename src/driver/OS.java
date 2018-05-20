@@ -1,4 +1,4 @@
-/***
+/*
  * Bao Nguyen
  * BCN140030
  * SE 4348.501
@@ -6,6 +6,11 @@
  * Project 3
  * This project demonstrate six different scheduling algorithms.
  */
+
+package driver;
+
+import schedulers.*;
+import schedulers.FeedbackScheduler;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -65,7 +70,7 @@ public class OS {
      * read data from the file and create new jobs
      * @return a linked list of jobs
      */
-    public static LinkedList<Job> createJobs() {
+    private static LinkedList<Job> createJobs() {
         LinkedList<Job> jobs = new LinkedList<>();
 
         System.out.print("Enter a file name: ");
@@ -103,7 +108,7 @@ public class OS {
      * @param upperBound: upper bound of the domain of input
      * @return an integer
      */
-    public static int getInt(String prompt, int lowerBound, int upperBound) {
+    private static int getInt(String prompt, int lowerBound, int upperBound) {
         int number = 0;
         boolean parseSuccess = false;
         Scanner keyboard = new Scanner(System.in);

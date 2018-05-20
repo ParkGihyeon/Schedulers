@@ -1,15 +1,10 @@
-/***
- * Bao Nguyen
- * BCN140030
- * SE 4348.501
- *
- * Project 3
- * This project demonstrate six different scheduling algorithms.
- */
+package driver;
+
+import schedulers.Scheduler;
 
 
 /***
- * class: Job
+ * class: driver.Job
  * represent each job with name, arrival time, duration,
  * and how to compare 2 jobs
  */
@@ -34,31 +29,31 @@ public class Job implements Comparable {
         this.arrivalTime = arrivalTime;
         this.duration = duration;
         runTime = 0;
-        runStat = new StringBuilder("");
+        runStat = new StringBuilder();
         sortMode = Scheduler.FIRST_COME_FIRST_SERVE;
     }
 
-    String getName() {
+    public String getName() {
         return name;
     }
 
-    int getArrivalTime() {
+    public int getArrivalTime() {
         return arrivalTime;
     }
 
-    int getDuration() {
+    public int getDuration() {
         return duration;
     }
 
-    static void setSortMode(int mode) {
+    public static void setSortMode(int mode) {
         sortMode = mode;
     }
 
-    void print() {
+    public void print() {
         System.out.println(runStat.toString());
     }
 
-    int getRemainingTime() {
+    public int getRemainingTime() {
         return this.duration - this.runTime;
     }
 
@@ -67,7 +62,7 @@ public class Job implements Comparable {
      * method: runComplete
      * run the entire job to its completion
      */
-    void runComplete() {
+    public void runComplete() {
         for (int time = 0; time < duration; time++) {
             runStat.append(name);
         }
@@ -80,7 +75,7 @@ public class Job implements Comparable {
      * @param timeSlice: time to run
      * @param wait: wait time
      */
-    void runSlice(int timeSlice, int wait) {
+    public void runSlice(int timeSlice, int wait) {
         // run time
         for (int t = 0; t < timeSlice; t++) {
             runStat.append(name);
@@ -106,21 +101,11 @@ public class Job implements Comparable {
 
         // first come first serve case
         if (sortMode == Scheduler.FIRST_COME_FIRST_SERVE) {
-            if (this.arrivalTime < rJob.arrivalTime)
-                return -1;
-            else if (this.arrivalTime == rJob.arrivalTime)
-                return 0;
-            else
-                return 1;
+            return Integer.compare(this.arrivalTime, rJob.arrivalTime);
         }
         // shortest process next case
         else if (sortMode == Scheduler.SHORTEST_PROCESS_NEXT) {
-            if (this.duration < rJob.duration)
-                return -1;
-            else if (this.duration == rJob.duration)
-                return 0;
-            else
-                return 1;
+            return Integer.compare(this.duration, rJob.duration);
         }
         // highest response ratio next case
         else if (sortMode == Scheduler.HIGHEST_RESPONSE_RATIO_NEXT) {
@@ -133,21 +118,11 @@ public class Job implements Comparable {
             double rRatio = (double) (rWait + rJob.duration) / rJob.duration;
 
             // compare
-            if (thisRatio > rRatio)
-                return -1;
-            else if (thisRatio == rRatio)
-                return 0;
-            else
-                return 1;
+            return Double.compare(rRatio, thisRatio);
         }
         // shortest remaining time case
         else if (sortMode == Scheduler.SHORTEST_REMAINING_TIME) {
-            if(this.getRemainingTime() < rJob.getRemainingTime())
-                return -1;
-            else if(this.getRemainingTime() == rJob.getRemainingTime())
-                return 0;
-            else
-                return 1;
+            return Integer.compare(this.getRemainingTime(), rJob.getRemainingTime());
         }
         // feedback and round robin does not need this function
         else

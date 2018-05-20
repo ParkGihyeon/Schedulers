@@ -12,13 +12,13 @@ import java.util.List;
 
 
 /***
- * class: Scheduler
+ * class: schedulers.Scheduler
  * abstract class that holds common fields for all schedulers,
  * such as the list of jobs and an abstract method of how each
  * scheduler will run
  */
-public abstract class Scheduler {
-    protected LinkedList<Job> listOfJobs;                       // list of jobs to run
+public abstract class schedulers.Scheduler {
+    protected LinkedList<driver.Job> listOfJobs;                       // list of jobs to run
     protected static int startTime;                             // start time of the next job
     public static final int FIRST_COME_FIRST_SERVE = 1;
     public static final int ROUND_ROBIN = 2;
@@ -33,7 +33,7 @@ public abstract class Scheduler {
      * assign a list of jobs for the scheduler
      * @param jobs: list of jobs
      */
-    public Scheduler(LinkedList<Job> jobs) {
+    public schedulers.Scheduler(LinkedList<driver.Job> jobs) {
         listOfJobs = jobs;
         startTime = 0;
     }
@@ -48,9 +48,9 @@ public abstract class Scheduler {
      * print a list of jobs, one after another by name
      * @param jobs: list of jobs
      */
-    protected void printList(LinkedList<Job> jobs) {
+    protected void printList(LinkedList<driver.Job> jobs) {
         jobs.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
-        jobs.forEach(Job::print);
+        jobs.forEach(driver.Job::print);
         System.out.println();
     }
 
@@ -70,7 +70,7 @@ public abstract class Scheduler {
      */
     protected void run(boolean isPreemptive) {
         startTime = 0;
-        LinkedList<Job> processedJobs = new LinkedList<>();
+        LinkedList<driver.Job> processedJobs = new LinkedList<>();
 
         // do until the list of jobs is empty
         while(!listOfJobs.isEmpty()) {
@@ -81,7 +81,7 @@ public abstract class Scheduler {
              */
             if (isPreemptive) {
                 // remove next job from the list
-                Job job = next();
+                driver.Job job = next();
                 job.runSlice(0, startTime);
                 job.runComplete();
                 processedJobs.add(job);
@@ -97,7 +97,7 @@ public abstract class Scheduler {
 
                 // calculate total time of all jobs
                 int totalTime = 0;
-                for(Job currentJob : listOfJobs)
+                for(driver.Job currentJob : listOfJobs)
                     totalTime += currentJob.getDuration();
 
                 // run until all jobs are done
@@ -123,12 +123,12 @@ public abstract class Scheduler {
     }
 
 
-    LinkedList<Job> runPreemptive() {
-        LinkedList<Job> processedJobs = new LinkedList<>();
+    LinkedList<driver.Job> runPreemptive() {
+        LinkedList<driver.Job> processedJobs = new LinkedList<>();
 
         while(!listOfJobs.isEmpty()) {
             // remove next job from the list
-            Job job = next();
+            driver.Job job = next();
             job.runSlice(0, startTime);
             job.runComplete();
             processedJobs.add(job);
@@ -142,13 +142,13 @@ public abstract class Scheduler {
     /***
      * method: next
      * sort the list of jobs based on the priority,
-     * i.e. the compareTo method of the Job class
+     * i.e. the compareTo method of the driver.Job class
      * this method will be overridden by the derived classes
      * remove and return the first job
      * @return the next job to run
      */
-    public Job next() {
-        Collections.sort(listOfJobs, Job::compareTo);
+    public driver.Job next() {
+        Collections.sort(listOfJobs, driver.Job::compareTo);
         return listOfJobs.removeFirst();
     }
 
@@ -159,13 +159,13 @@ public abstract class Scheduler {
      * @param currentJob: currently running job
      * @param mode: which scheduling method
      */
-    public void next(Job currentJob, int mode) {
+    public void next(driver.Job currentJob, int mode) {
         /*
          * use arrival time as priority if only 1 job
          * else check jobs wait
          */
         if(listOfJobs.size() < 2) {
-            Job.setSortMode(FIRST_COME_FIRST_SERVE);
+            driver.Job.setSortMode(FIRST_COME_FIRST_SERVE);
         }
         else {
             int start = startTime;                          // start time of current job
@@ -191,53 +191,53 @@ public abstract class Scheduler {
 
             // if more than 1 job is waiting, set the priority to shortest process next
             if(jobsWait > 1)
-                Job.setSortMode(mode);
+                driver.Job.setSortMode(mode);
         }
     }
 }
 
 
 /***
- * class: FirstComeFirstServeScheduler
+ * class: schedulers.FirstComeFirstServeScheduler
  * run each job one by one based on the arrival time
  * nonpreemptive
  */
-class FirstComeFirstServeScheduler extends Scheduler {
-    public FirstComeFirstServeScheduler(LinkedList<Job> jobs) {
+class schedulers.FirstComeFirstServeScheduler extends schedulers.Scheduler {
+    public schedulers.FirstComeFirstServeScheduler(LinkedList<driver.Job> jobs) {
         super(jobs);
     }
 
     @Override
     public void run() {
-        System.out.println("FirstComeFirstServeScheduler:");
+        System.out.println("schedulers.FirstComeFirstServeScheduler:");
         super.run(true);
     }
 
     @Override
-    public Job next() {
-        Job.setSortMode(FIRST_COME_FIRST_SERVE);
+    public driver.Job next() {
+        driver.Job.setSortMode(FIRST_COME_FIRST_SERVE);
         return super.next();
     }
 }
 
 
 /***
- * class: RoundRobinScheduler
+ * class: schedulers.RoundRobinScheduler
  *
  * preemtive
  */
-class RoundRobinScheduler extends Scheduler {
-    public RoundRobinScheduler(LinkedList<Job> jobs) {
+class schedulers.RoundRobinScheduler extends schedulers.Scheduler {
+    public schedulers.RoundRobinScheduler(LinkedList<driver.Job> jobs) {
         super(jobs);
     }
 
     public void run() {
-        System.out.println("RoundRobinScheduler:");
+        System.out.println("schedulers.RoundRobinScheduler:");
         super.run(false);
     }
 
     @Override
-    public Job next() {
+    public driver.Job next() {
         return null;
     }
 
@@ -245,24 +245,24 @@ class RoundRobinScheduler extends Scheduler {
 
 
 /***
- * class: ShortestProcessNextScheduler
+ * class: schedulers.ShortestProcessNextScheduler
  * run each job based on their relative arrival time and their process duration
  * nonpreemptive
  */
-class ShortestProcessNextScheduler extends Scheduler {
-    public ShortestProcessNextScheduler(LinkedList<Job> jobs) {
+class schedulers.ShortestProcessNextScheduler extends schedulers.Scheduler {
+    public schedulers.ShortestProcessNextScheduler(LinkedList<driver.Job> jobs) {
         super(jobs);
     }
 
     @Override
     public void run() {
-        System.out.println("ShortestProcessNextScheduler:");
+        System.out.println("schedulers.ShortestProcessNextScheduler:");
         super.run(true);
     }
 
     @Override
-    public Job next() {
-        Job nextJob = super.next();
+    public driver.Job next() {
+        driver.Job nextJob = super.next();
         super.next(nextJob, SHORTEST_PROCESS_NEXT);
         return nextJob;
     }
@@ -270,47 +270,47 @@ class ShortestProcessNextScheduler extends Scheduler {
 
 
 /***
- * class: ShortestRemainingTimeScheduler
+ * class: schedulers.ShortestRemainingTimeScheduler
  *
  * preemptive
  */
-class ShortestRemainingTimeScheduler extends Scheduler {
-    public ShortestRemainingTimeScheduler(LinkedList<Job> jobs) {
+class schedulers.ShortestRemainingTimeScheduler extends schedulers.Scheduler {
+    public schedulers.ShortestRemainingTimeScheduler(LinkedList<driver.Job> jobs) {
         super(jobs);
     }
 
     @Override
     public void run() {
-        System.out.println("ShortestRemainingTimeScheduler:");
+        System.out.println("schedulers.ShortestRemainingTimeScheduler:");
         super.run(false);
     }
 
     @Override
-    public Job next() {
+    public driver.Job next() {
         return null;
     }
 }
 
 
 /***
- * class: ShortestProcessNextScheduler
+ * class: schedulers.ShortestProcessNextScheduler
  * run each job based on their relative arrival time and their response ratio
  * nonpreemptive
  */
-class HighestResponseRatioNextScheduler extends Scheduler {
-    public HighestResponseRatioNextScheduler(LinkedList<Job> jobs) {
+class schedulers.HighestResponseRatioNextScheduler extends schedulers.Scheduler {
+    public schedulers.HighestResponseRatioNextScheduler(LinkedList<driver.Job> jobs) {
         super(jobs);
     }
 
     @Override
     public void run() {
-        System.out.println("HighestResponseRatioNextScheduler:");
+        System.out.println("schedulers.HighestResponseRatioNextScheduler:");
         super.run(true);
     }
 
     @Override
-    public Job next() {
-        Job nextJob = super.next();
+    public driver.Job next() {
+        driver.Job nextJob = super.next();
         super.next(nextJob, HIGHEST_RESPONSE_RATIO_NEXT);
         return nextJob;
     }
@@ -318,23 +318,23 @@ class HighestResponseRatioNextScheduler extends Scheduler {
 
 
 /***
- * class: FeedbackScheduler
+ * class: schedulers.FeedbackScheduler
  *
  * preemptive
  */
-class FeedbackScheduler extends Scheduler {
-    public FeedbackScheduler(LinkedList<Job> jobs) {
+class schedulers.FeedbackScheduler extends schedulers.Scheduler {
+    public schedulers.FeedbackScheduler(LinkedList<driver.Job> jobs) {
         super(jobs);
     }
 
     @Override
     public void run() {
-        System.out.println("FeedbackScheduler:");
+        System.out.println("schedulers.FeedbackScheduler:");
         super.run(false);
     }
 
     @Override
-    public Job next() {
+    public driver.Job next() {
         return null;
     }
 }

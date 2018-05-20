@@ -1,0 +1,340 @@
+/***
+ * Bao Nguyen
+ * BCN140030
+ * SE 4348.501
+ *
+ * Project 3
+ */
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+
+/***
+ * class: Scheduler
+ * abstract class that holds common fields for all schedulers,
+ * such as the list of jobs and an abstract method of how each
+ * scheduler will run
+ */
+public abstract class Scheduler {
+    protected LinkedList<Job> listOfJobs;                       // list of jobs to run
+    protected static int startTime;                             // start time of the next job
+    public static final int FIRST_COME_FIRST_SERVE = 1;
+    public static final int ROUND_ROBIN = 2;
+    public static final int SHORTEST_PROCESS_NEXT = 3;
+    public static final int SHORTEST_REMAINING_TIME = 4;
+    public static final int HIGHEST_RESPONSE_RATIO_NEXT = 5;
+    public static final int FEEDBACK = 6;
+
+
+    /***
+     * constructor
+     * assign a list of jobs for the scheduler
+     * @param jobs: list of jobs
+     */
+    public Scheduler(LinkedList<Job> jobs) {
+        listOfJobs = jobs;
+        startTime = 0;
+    }
+
+    static int getStartTime() {
+        return startTime;
+    }
+
+
+    /***
+     * method: printList
+     * print a list of jobs, one after another by name
+     * @param jobs: list of jobs
+     */
+    protected void printList(LinkedList<Job> jobs) {
+        jobs.sort((o1, o2) -> o1.getName().compareToIgnoreCase(o2.getName()));
+        jobs.forEach(Job::print);
+        System.out.println();
+    }
+
+    /***
+     * method: run
+     * abstract method
+     * this method gets call in polymorphism behavior
+     */
+    abstract void run();
+
+
+    /***
+     * method: run
+     * this is the actual implementation
+     * setup and display the processed jobs based on different scheduling algorithms
+     * @param isPreemptive: run job as a whole or as time slices
+     */
+    protected void run(boolean isPreemptive) {
+        startTime = 0;
+        LinkedList<Job> processedJobs = new LinkedList<>();
+
+        // do until the list of jobs is empty
+        while(!listOfJobs.isEmpty()) {
+            /*
+             * run whole job:
+             * set the wait time for the job, then run till it's done
+             * add that job to the processedJobs list and set new start time
+             */
+            if (isPreemptive) {
+                // remove next job from the list
+                Job job = next();
+                job.runSlice(0, startTime);
+                job.runComplete();
+                processedJobs.add(job);
+                startTime += job.getDuration();
+            }
+            /*
+             * run slice of job:
+             * ...
+             * add the job to a correct list based on the condition
+             */
+            else {
+//                job.runSlice(job.getDuration(), 0, false);
+
+                // calculate total time of all jobs
+                int totalTime = 0;
+                for(Job currentJob : listOfJobs)
+                    totalTime += currentJob.getDuration();
+
+                // run until all jobs are done
+                while (startTime < totalTime) {
+
+                }
+
+                /*
+                 * add a job to the processedJobs list if done
+                 * or add back to the list of jobs if not done
+                 */
+                if(job.getRemainingTime() == 0)
+                    processedJobs.add(job);
+                else
+                    listOfJobs.addLast(job);
+
+            }
+
+        }
+
+        // display the jobs
+        printList(processedJobs);
+    }
+
+
+    LinkedList<Job> runPreemptive() {
+        LinkedList<Job> processedJobs = new LinkedList<>();
+
+        while(!listOfJobs.isEmpty()) {
+            // remove next job from the list
+            Job job = next();
+            job.runSlice(0, startTime);
+            job.runComplete();
+            processedJobs.add(job);
+            startTime += job.getDuration();
+        }
+
+        return processedJobs;
+    }
+
+
+    /***
+     * method: next
+     * sort the list of jobs based on the priority,
+     * i.e. the compareTo method of the Job class
+     * this method will be overridden by the derived classes
+     * remove and return the first job
+     * @return the next job to run
+     */
+    public Job next() {
+        Collections.sort(listOfJobs, Job::compareTo);
+        return listOfJobs.removeFirst();
+    }
+
+
+    /***
+     * method: next
+     * decide which job to run next
+     * @param currentJob: currently running job
+     * @param mode: which scheduling method
+     */
+    public void next(Job currentJob, int mode) {
+        /*
+         * use arrival time as priority if only 1 job
+         * else check jobs wait
+         */
+        if(listOfJobs.size() < 2) {
+            Job.setSortMode(FIRST_COME_FIRST_SERVE);
+        }
+        else {
+            int start = startTime;                          // start time of current job
+            int finish = start + currentJob.getDuration();  // finish time of current job
+            int index = 0;                                  // index of job in the list
+            int jobsWait = 0;                               // how many jobs are waiting
+
+            // check till the end of the list
+            while(index < listOfJobs.size()) {
+                /*
+                 * if there is a job that starts after the start time and finish before the finish time
+                 * of the current job, increment the job wait and count to check the next job
+                 * when find a job that does not satisfy the above condition, break out of the while loop
+                 */
+                if(listOfJobs.get(index).getArrivalTime() < finish &&
+                        listOfJobs.get(index).getArrivalTime() > start) {
+                    jobsWait++;
+                    index++;
+                }
+                else
+                    break;
+            }
+
+            // if more than 1 job is waiting, set the priority to shortest process next
+            if(jobsWait > 1)
+                Job.setSortMode(mode);
+        }
+    }
+}
+
+
+/***
+ * class: FirstComeFirstServeScheduler
+ * run each job one by one based on the arrival time
+ * nonpreemptive
+ */
+class FirstComeFirstServeScheduler extends Scheduler {
+    public FirstComeFirstServeScheduler(LinkedList<Job> jobs) {
+        super(jobs);
+    }
+
+    @Override
+    public void run() {
+        System.out.println("FirstComeFirstServeScheduler:");
+        super.run(true);
+    }
+
+    @Override
+    public Job next() {
+        Job.setSortMode(FIRST_COME_FIRST_SERVE);
+        return super.next();
+    }
+}
+
+
+/***
+ * class: RoundRobinScheduler
+ *
+ * preemtive
+ */
+class RoundRobinScheduler extends Scheduler {
+    public RoundRobinScheduler(LinkedList<Job> jobs) {
+        super(jobs);
+    }
+
+    public void run() {
+        System.out.println("RoundRobinScheduler:");
+        super.run(false);
+    }
+
+    @Override
+    public Job next() {
+        return null;
+    }
+
+}
+
+
+/***
+ * class: ShortestProcessNextScheduler
+ * run each job based on their relative arrival time and their process duration
+ * nonpreemptive
+ */
+class ShortestProcessNextScheduler extends Scheduler {
+    public ShortestProcessNextScheduler(LinkedList<Job> jobs) {
+        super(jobs);
+    }
+
+    @Override
+    public void run() {
+        System.out.println("ShortestProcessNextScheduler:");
+        super.run(true);
+    }
+
+    @Override
+    public Job next() {
+        Job nextJob = super.next();
+        super.next(nextJob, SHORTEST_PROCESS_NEXT);
+        return nextJob;
+    }
+}
+
+
+/***
+ * class: ShortestRemainingTimeScheduler
+ *
+ * preemptive
+ */
+class ShortestRemainingTimeScheduler extends Scheduler {
+    public ShortestRemainingTimeScheduler(LinkedList<Job> jobs) {
+        super(jobs);
+    }
+
+    @Override
+    public void run() {
+        System.out.println("ShortestRemainingTimeScheduler:");
+        super.run(false);
+    }
+
+    @Override
+    public Job next() {
+        return null;
+    }
+}
+
+
+/***
+ * class: ShortestProcessNextScheduler
+ * run each job based on their relative arrival time and their response ratio
+ * nonpreemptive
+ */
+class HighestResponseRatioNextScheduler extends Scheduler {
+    public HighestResponseRatioNextScheduler(LinkedList<Job> jobs) {
+        super(jobs);
+    }
+
+    @Override
+    public void run() {
+        System.out.println("HighestResponseRatioNextScheduler:");
+        super.run(true);
+    }
+
+    @Override
+    public Job next() {
+        Job nextJob = super.next();
+        super.next(nextJob, HIGHEST_RESPONSE_RATIO_NEXT);
+        return nextJob;
+    }
+}
+
+
+/***
+ * class: FeedbackScheduler
+ *
+ * preemptive
+ */
+class FeedbackScheduler extends Scheduler {
+    public FeedbackScheduler(LinkedList<Job> jobs) {
+        super(jobs);
+    }
+
+    @Override
+    public void run() {
+        System.out.println("FeedbackScheduler:");
+        super.run(false);
+    }
+
+    @Override
+    public Job next() {
+        return null;
+    }
+}

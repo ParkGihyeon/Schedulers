@@ -23,7 +23,7 @@ public class RoundRobinScheduler extends PreemptiveScheduler {
 
     @Override
     public void run() {
-        System.out.println("schedulers.RoundRobinScheduler:");
+        System.out.printf("RoundRobinScheduler (with quantum = %d):", quantum);
 
         LinkedList<Job> queue = new LinkedList<>();             // queue to hold running jobs
         boolean jobDone = false;                                // mark when a job is done

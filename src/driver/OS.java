@@ -19,7 +19,29 @@ import java.util.Scanner;
 
 public class OS {
     public static void main(String[] args) {
-        LinkedList<Job> jobs = createJobs();    // create jobs from the file
+        try {
+            String jobsFileName = getJobsFileName();
+
+            System.out.println("Mode:\n" +
+                    "1. Individual\n" +
+                    "2. All"
+            );
+            int type = getInt("Your choice: ", 1, 2);
+
+            if (type == 1) {
+                runIndividualScheduler(jobsFileName);
+            }
+            else {
+                runAllSchedulers(jobsFileName);
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error: cannot find the specified file.");
+        }
+    }
+
+
+    private static void runIndividualScheduler(String jobsFileName) throws FileNotFoundException {
         int type = 0;                           // get type of scheduler
         Scheduler scheduler;
 
@@ -32,6 +54,7 @@ public class OS {
                 "5. Highest response ratio next\n" +
                 "6. Feedback");
         type = getInt("Your choice: ", 1, 6);
+        LinkedList<Job> jobs = createJobs(jobsFileName);
 
         // set the desired scheduler
         switch (type) {
@@ -41,7 +64,7 @@ public class OS {
             // run highest-response-ratio-next scheduler (done)
             case Scheduler.HIGHEST_RESPONSE_RATIO_NEXT:
                 scheduler = new HighestResponseRatioNextScheduler(jobs); break;
-            // run round-robin scheduler (may be wrong)
+            // run round-robin scheduler
             case Scheduler.ROUND_ROBIN:
                 int quantum = getInt("Enter quantum: ", 1, Integer.MAX_VALUE);
                 scheduler = new RoundRobinScheduler(jobs, quantum); break;
@@ -61,7 +84,45 @@ public class OS {
 
         // run the scheduler as polymorphism
         scheduler.run();
+    }
 
+
+    private static void runAllSchedulers(String jobsFileName) throws FileNotFoundException {
+        Scheduler scheduler = null;
+        LinkedList<Job> jobs = createJobs(jobsFileName);
+
+        scheduler = new FirstComeFirstServeScheduler(jobs);
+        scheduler.run();
+
+        jobs = createJobs(jobsFileName);
+        scheduler = new HighestResponseRatioNextScheduler(jobs);
+        scheduler.run();
+
+        jobs = createJobs(jobsFileName);
+        scheduler = new RoundRobinScheduler(jobs, 3);
+        scheduler.run();
+
+        jobs = createJobs(jobsFileName);
+        scheduler = new ShortestProcessNextScheduler(jobs);
+        scheduler.run();
+
+        jobs = createJobs(jobsFileName);
+        scheduler = new ShortestRemainingTimeScheduler(jobs);
+        scheduler.run();
+
+        jobs = createJobs(jobsFileName);
+        scheduler = new FeedbackScheduler(jobs);
+        scheduler.run();
+
+    }
+
+
+    private static String getJobsFileName() throws FileNotFoundException {
+        System.out.print("Enter a file name: ");
+        String fileName = new Scanner(System.in).nextLine();
+        System.out.println();
+        Scanner sc = new Scanner(new File(fileName));
+        return fileName;
     }
 
 
@@ -70,31 +131,19 @@ public class OS {
      * read data from the file and create new jobs
      * @return a linked list of jobs
      */
-    private static LinkedList<Job> createJobs() {
+    private static LinkedList<Job> createJobs(String fileName) throws FileNotFoundException {
         LinkedList<Job> jobs = new LinkedList<>();
 
-        System.out.print("Enter a file name: ");
-        String fileName = new Scanner(System.in).nextLine();
-        System.out.println();
+        Scanner sc = new Scanner(new File(fileName));
 
-        // read the file and setup the jobs
-        try {
-            Scanner sc = new Scanner(new File(fileName));
+        while (sc.hasNext()) {
+            String name = sc.next();
+            int arrivalTime = sc.nextInt();
+            int duration = sc.nextInt();
 
-            while (sc.hasNext()) {
-                String name = sc.next();
-                int arrivalTime = sc.nextInt();
-                int duration = sc.nextInt();
-
-                jobs.add(new Job(name, arrivalTime, duration));
-            }
-            sc.close();
+            jobs.add(new Job(name, arrivalTime, duration));
         }
-        // cannot find file -> print error and exit the program
-        catch (FileNotFoundException e) {
-            System.out.printf("Error: cannot find the file\"%s\"\n", fileName);
-            System.exit(-1);
-        }
+        sc.close();
 
         return jobs;
     }

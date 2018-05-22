@@ -8,4 +8,6 @@ For more details on the particular schedulers, checkout [this](https://www.tutor
 
 ## How to run
 
-Run the [OS](./src/driver/OS.java) and follow the instruction. Sample jobs file is [here](./jobs.txt).
+Run the [OS](./src/driver/OS.java) and follow the instruction. 
+
+Sample jobs file is [here](./jobs.txt). Each row is a job. Each job is represented as: name, start time, duration.
